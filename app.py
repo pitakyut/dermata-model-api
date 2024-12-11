@@ -8,6 +8,8 @@ from firebase_admin import credentials, initialize_app
 from PIL import Image
 from google.cloud import storage
 from google.cloud import firestore
+from datetime import datetime
+import pytz
 
 # Inisialisasi aplikasi Flask
 app = Flask(__name__)
@@ -49,6 +51,9 @@ def predict_image():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
+    jakarta_timezone = pytz.timezone("Asia/Jakarta")
+    created_at = datetime.now(jakarta_timezone).isoformat()
+
     try:
         file.seek(0)
         input_data = preprocess_image(file)
@@ -62,11 +67,13 @@ def predict_image():
         doc_ref.set({
             "label_name": label_name,
             "confidence": float(confidence),
+            "created_at": created_at
         })
 
         return jsonify({
             "prediction": label_name,
             "confidence": float(confidence),
+            "created_at": created_at
         }), 200
 
     except Exception as e:
